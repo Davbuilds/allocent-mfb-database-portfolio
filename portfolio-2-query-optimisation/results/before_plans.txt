@@ -1,0 +1,173 @@
+                                                                  QUERY PLAN                                                                  
+----------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=4982.80..4985.08 rows=20 width=33) (actual time=59.282..65.398 rows=20.00 loops=1)
+   Buffers: shared hit=2549
+   ->  Gather Merge  (cost=4982.80..4991.23 rows=74 width=33) (actual time=59.279..65.392 rows=20.00 loops=1)
+         Workers Planned: 1
+         Workers Launched: 1
+         Buffers: shared hit=2549
+         ->  Sort  (cost=3982.79..3982.90 rows=44 width=33) (actual time=8.447..8.448 rows=10.00 loops=2)
+               Sort Key: created_at DESC
+               Sort Method: top-N heapsort  Memory: 27kB
+               Buffers: shared hit=2549
+               Worker 0:  Sort Method: quicksort  Memory: 25kB
+               ->  Parallel Seq Scan on expense_requests  (cost=0.00..3981.59 rows=44 width=33) (actual time=0.048..8.373 rows=52.50 loops=2)
+                     Filter: (requested_by = 2323)
+                     Rows Removed by Filter: 99948
+                     Buffers: shared hit=2511
+ Planning:
+   Buffers: shared hit=91
+ Planning Time: 2.368 ms
+ Execution Time: 65.450 ms
+(19 rows)
+
+                                                                                      QUERY PLAN                                                                                       
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Gather Merge  (cost=4345.93..4348.43 rows=22 width=54) (actual time=111.149..116.023 rows=24.00 loops=1)
+   Workers Planned: 1
+   Workers Launched: 1
+   Buffers: shared hit=1924
+   ->  Sort  (cost=3345.92..3345.95 rows=13 width=54) (actual time=73.578..73.579 rows=12.00 loops=2)
+         Sort Key: created_at
+         Sort Method: quicksort  Memory: 26kB
+         Buffers: shared hit=1924
+         Worker 0:  Sort Method: quicksort  Memory: 25kB
+         ->  Parallel Seq Scan on wallet_transactions  (cost=0.00..3345.68 rows=13 width=54) (actual time=36.161..73.519 rows=12.00 loops=2)
+               Filter: ((created_at >= '2026-03-01 00:00:00+01'::timestamp with time zone) AND (created_at < '2026-04-01 00:00:00+01'::timestamp with time zone) AND (wallet_id = 42))
+               Rows Removed by Filter: 70886
+               Buffers: shared hit=1886
+ Planning:
+   Buffers: shared hit=59 dirtied=2
+ Planning Time: 3.818 ms
+ Execution Time: 116.053 ms
+(17 rows)
+
+                                                               QUERY PLAN                                                               
+----------------------------------------------------------------------------------------------------------------------------------------
+ Gather Merge  (cost=5276.75..5284.27 rows=66 width=31) (actual time=77.283..82.541 rows=45.00 loops=1)
+   Workers Planned: 1
+   Workers Launched: 1
+   Buffers: shared hit=2549
+   ->  Sort  (cost=4276.74..4276.83 rows=39 width=31) (actual time=7.644..7.646 rows=22.50 loops=2)
+         Sort Key: created_at
+         Sort Method: quicksort  Memory: 27kB
+         Buffers: shared hit=2549
+         Worker 0:  Sort Method: quicksort  Memory: 25kB
+         ->  Parallel Seq Scan on expense_requests  (cost=0.00..4275.71 rows=39 width=31) (actual time=0.152..7.568 rows=22.50 loops=2)
+               Filter: ((wallet_id = 42) AND ((status)::text = 'PENDING'::text))
+               Rows Removed by Filter: 99978
+               Buffers: shared hit=2511
+ Planning:
+   Buffers: shared hit=11
+ Planning Time: 0.109 ms
+ Execution Time: 82.569 ms
+(17 rows)
+
+                                                                                     QUERY PLAN                                                                                     
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=6013.62..6013.63 rows=4 width=47) (actual time=120.185..126.082 rows=6.00 loops=1)
+   Sort Key: (sum(p.amount)) DESC
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=13576
+   ->  Finalize GroupAggregate  (cost=6010.24..6013.58 rows=4 width=47) (actual time=120.128..126.065 rows=6.00 loops=1)
+         Group Key: d.name
+         Buffers: shared hit=13573
+         ->  Gather Merge  (cost=6010.24..6013.46 rows=7 width=47) (actual time=120.110..126.052 rows=12.00 loops=1)
+               Workers Planned: 1
+               Workers Launched: 1
+               Buffers: shared hit=13573
+               ->  Partial GroupAggregate  (cost=5010.23..5012.66 rows=4 width=47) (actual time=86.151..86.186 rows=6.00 loops=2)
+                     Group Key: d.name
+                     Buffers: shared hit=13573
+                     ->  Sort  (cost=5010.23..5010.83 rows=238 width=15) (actual time=86.116..86.126 rows=207.00 loops=2)
+                           Sort Key: d.name
+                           Sort Method: quicksort  Memory: 35kB
+                           Buffers: shared hit=13573
+                           Worker 0:  Sort Method: quicksort  Memory: 29kB
+                           ->  Nested Loop  (cost=15.99..5000.84 rows=238 width=15) (actual time=1.203..85.858 rows=207.00 loops=2)
+                                 Buffers: shared hit=13565
+                                 ->  Hash Join  (cost=15.70..4167.88 rows=2353 width=11) (actual time=0.850..17.843 rows=2039.50 loops=2)
+                                       Hash Cond: (e.wallet_id = w.wallet_id)
+                                       Buffers: shared hit=2527
+                                       ->  Parallel Seq Scan on expense_requests e  (cost=0.00..3687.47 rows=117647 width=8) (actual time=0.007..6.968 rows=100000.00 loops=2)
+                                             Buffers: shared hit=2511
+                                       ->  Hash  (cost=15.62..15.62 rows=6 width=11) (actual time=0.825..0.827 rows=6.00 loops=2)
+                                             Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                             Buffers: shared hit=16
+                                             ->  Hash Join  (cost=6.83..15.62 rows=6 width=11) (actual time=0.779..0.822 rows=6.00 loops=2)
+                                                   Hash Cond: (w.department_id = d.department_id)
+                                                   Buffers: shared hit=16
+                                                   ->  Seq Scan on department_wallets w  (cost=0.00..8.00 rows=300 width=8) (actual time=0.407..0.427 rows=300.00 loops=2)
+                                                         Buffers: shared hit=10
+                                                   ->  Hash  (cost=6.75..6.75 rows=6 width=11) (actual time=0.359..0.360 rows=6.00 loops=2)
+                                                         Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                                         Buffers: shared hit=6
+                                                         ->  Seq Scan on departments d  (cost=0.00..6.75 rows=6 width=11) (actual time=0.334..0.352 rows=6.00 loops=2)
+                                                               Filter: (company_id = 7)
+                                                               Rows Removed by Filter: 294
+                                                               Buffers: shared hit=6
+                                 ->  Index Scan using payments_request_id_key on payments p  (cost=0.29..0.35 rows=1 width=12) (actual time=0.033..0.033 rows=0.10 loops=4079)
+                                       Index Cond: (request_id = e.request_id)
+                                       Filter: ((paid_at >= '2026-04-01 00:00:00+01'::timestamp with time zone) AND (paid_at < '2026-07-01 00:00:00+01'::timestamp with time zone))
+                                       Rows Removed by Filter: 1
+                                       Index Searches: 4079
+                                       Buffers: shared hit=11038
+ Planning:
+   Buffers: shared hit=315 dirtied=2
+ Planning Time: 38.044 ms
+ Execution Time: 126.234 ms
+(51 rows)
+
+                                                                                       QUERY PLAN                                                                                        
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=5851.55..5851.57 rows=5 width=65) (actual time=66.315..71.295 rows=5.00 loops=1)
+   Buffers: shared hit=13567
+   ->  Sort  (cost=5851.55..5851.60 rows=20 width=65) (actual time=66.313..71.292 rows=5.00 loops=1)
+         Sort Key: (sum(p.amount)) DESC
+         Sort Method: top-N heapsort  Memory: 25kB
+         Buffers: shared hit=13567
+         ->  Finalize GroupAggregate  (cost=5846.76..5851.22 rows=20 width=65) (actual time=66.244..71.246 rows=20.00 loops=1)
+               Group Key: v.vendor_id
+               Buffers: shared hit=13567
+               ->  Gather Merge  (cost=5846.76..5850.63 rows=34 width=65) (actual time=66.215..71.199 rows=20.00 loops=1)
+                     Workers Planned: 1
+                     Workers Launched: 1
+                     Buffers: shared hit=13567
+                     ->  Sort  (cost=4846.75..4846.80 rows=20 width=65) (actual time=27.379..27.384 rows=10.00 loops=2)
+                           Sort Key: v.vendor_id
+                           Sort Method: quicksort  Memory: 27kB
+                           Buffers: shared hit=13567
+                           Worker 0:  Sort Method: quicksort  Memory: 25kB
+                           ->  Partial HashAggregate  (cost=4846.06..4846.31 rows=20 width=65) (actual time=27.345..27.351 rows=10.00 loops=2)
+                                 Group Key: v.vendor_id
+                                 Batches: 1  Memory Usage: 32kB
+                                 Buffers: shared hit=13560
+                                 Worker 0:  Batches: 1  Memory Usage: 32kB
+                                 ->  Nested Loop  (cost=15.22..4833.73 rows=1644 width=33) (actual time=0.291..26.602 rows=1439.50 loops=2)
+                                       Buffers: shared hit=13560
+                                       ->  Hash Join  (cost=14.93..4012.54 rows=2353 width=29) (actual time=0.262..20.394 rows=2039.50 loops=2)
+                                             Hash Cond: (e.vendor_id = v.vendor_id)
+                                             Buffers: shared hit=2523
+                                             ->  Parallel Seq Scan on expense_requests e  (cost=0.00..3687.47 rows=117647 width=8) (actual time=0.010..7.653 rows=100000.00 loops=2)
+                                                   Buffers: shared hit=2511
+                                             ->  Hash  (cost=14.68..14.68 rows=20 width=25) (actual time=0.463..0.465 rows=20.00 loops=1)
+                                                   Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                                                   Buffers: shared hit=12
+                                                   ->  Bitmap Heap Scan on vendors v  (cost=4.43..14.68 rows=20 width=25) (actual time=0.182..0.441 rows=20.00 loops=1)
+                                                         Recheck Cond: (company_id = 7)
+                                                         Heap Blocks: exact=10
+                                                         Buffers: shared hit=12
+                                                         ->  Bitmap Index Scan on uq_vendor_per_company  (cost=0.00..4.43 rows=20 width=0) (actual time=0.132..0.132 rows=20.00 loops=1)
+                                                               Index Cond: (company_id = 7)
+                                                               Index Searches: 1
+                                                               Buffers: shared hit=2
+                                       ->  Index Scan using payments_request_id_key on payments p  (cost=0.29..0.35 rows=1 width=12) (actual time=0.002..0.002 rows=0.71 loops=4079)
+                                             Index Cond: (request_id = e.request_id)
+                                             Index Searches: 4079
+                                             Buffers: shared hit=11037
+ Planning:
+   Buffers: shared hit=77 dirtied=1
+ Planning Time: 10.992 ms
+ Execution Time: 71.505 ms
+(49 rows)
+
