@@ -1,7 +1,7 @@
 -- Allocent MFB: execution plans for the five business queries
--- Run from the terminal with psql (the \echo lines are psql commands).
+-- Run from the terminal with psql (the \qecho lines are psql commands).
 
-\echo '===== Q1: Staff member''s 20 most recent requests ====='
+\qecho '===== Q1: Staff member''s 20 most recent requests ====='
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT request_id, amount, category, status, created_at
 FROM expense_requests
@@ -9,7 +9,7 @@ WHERE requested_by = 2323
 ORDER BY created_at DESC
 LIMIT 20;
 
-\echo '===== Q2: Wallet statement for one month ====='
+\qecho '===== Q2: Wallet statement for one month ====='
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT txn_id, txn_type, amount, balance_after, reference, created_at
 FROM wallet_transactions
@@ -17,14 +17,14 @@ WHERE wallet_id = 42
   AND created_at >= '2026-03-01' AND created_at < '2026-04-01'
 ORDER BY created_at;
 
-\echo '===== Q3: Pending requests for one wallet ====='
+\qecho '===== Q3: Pending requests for one wallet ====='
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT request_id, requested_by, amount, category, created_at
 FROM expense_requests
 WHERE wallet_id = 42 AND status = 'PENDING'
 ORDER BY created_at;
 
-\echo '===== Q4: Spending per department for one company in one quarter ====='
+\qecho '===== Q4: Spending per department for one company in one quarter ====='
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT d.name AS department, count(*) AS payments, SUM(p.amount) AS total_spent
 FROM payments p
@@ -36,7 +36,7 @@ WHERE d.company_id = 7
 GROUP BY d.name
 ORDER BY total_spent DESC;
 
-\echo '===== Q5: Top 5 vendors by total paid for one company ====='
+\qecho '===== Q5: Top 5 vendors by total paid for one company ====='
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT v.name, v.bank_name, count(*) AS payments, SUM(p.amount) AS total_paid
 FROM payments p

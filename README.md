@@ -1,7 +1,7 @@
 # Allocent MFB – Advanced Database Systems Portfolio
 
 Course: MIT 8103 Advanced Database Systems (2026/2027, First Semester)
-Student: David 
+Student: David Ajitena
 
 ## Case Study
 Allocent MFB is a fictional Nigerian digital microfinance bank that offers a
@@ -18,13 +18,12 @@ Bujeti, and follows the maker-checker approval principle used in corporate
 banking.
 
 ### Users of the database
-- Company admins: manage the company profile, departments and staff.
-- Finance officers: allocate budgets, give second-level approval for large
+- **Company admins:** manage the company profile, departments and staff.
+- **Finance officers:** allocate budgets, give second-level approval for large
   requests, and view company-wide reports.
--Department managers: approve or reject their department's requests.
-- Staff:submit expense requests and upload receipts.
-- 
-Bank support and audit staff:** review activity and balances.
+- **Department managers:** approve or reject their department's requests.
+- **Staff:** submit expense requests and upload receipts.
+- **Bank support and audit staff:** review activity and balances.
 
 ### Major data stored
 Companies, departments, staff and roles, company accounts, department wallets,
@@ -47,9 +46,11 @@ transaction ledger, staff cards and receipts.
 - MongoDB (Portfolio 4)
 
 ## Portfolio Contents
-1. Database Design and Modelling(portfolio-1-database-design/)
-2. Query Processing and Optimisation(portfolio-2-query-optimisation/)
-3. Transactions and Concurrency(portfolio-3-transactions-concurrency/)
-4. NoSQL and Advanced Data Models(portfolio-4-nosql/)
-5. Distributed and Cloud Database Exercise(portfolio-5-distributed-cloud/)
+1. [Database Design and Modelling](portfolio-1-database-design/)
+2. [Query Processing and Optimisation](portfolio-2-query-optimisation/)
+3. [Transactions and Concurrency](portfolio-3-transactions-concurrency/)
+4. [NoSQL and Advanced Data Models](portfolio-4-nosql/)
+5. [Distributed and Cloud Database Exercise](portfolio-5-distributed-cloud/)
 
+## AI use
+AI tool use is recorded in [AI_USE_LOG.md](AI_USE_LOG.md).

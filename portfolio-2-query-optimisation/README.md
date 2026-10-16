@@ -124,7 +124,7 @@ an optimisation.
 
 ## Trade-offs
 
-Index usage and size (`pg_stat_user_indexes`):
+Index usage and size (`pg_stat_user_indexes`, from `index_stats.sql`):
 
 | Index | Times used | Size |
 |---|---|---|
@@ -181,7 +181,7 @@ request index, because it stores only pending rows, yet it made Q3 about
 ## Evidence
 - `results/before_plans.txt`, `results/after_plans.txt`,
   `results/after_covering_plans.txt`, `results/query_results.txt`
-- Screenshots in `screenshots/`: row counts, index sizes and usage, table sizes
+- Screenshots in `screenshots/`: `row-counts.png`, `index-usage.png`, `table-sizes.png`
 
 ## How to run
 From the repository root, after running Portfolio 1's `schema.sql`:
@@ -193,8 +193,12 @@ From the repository root, after running Portfolio 1's `schema.sql`:
 3. Create the indexes:
    `psql -U postgres -h localhost -d allocent_mfb -f portfolio-2-query-optimisation/indexes.sql`
 4. Repeat step 2, saving to `results/after_plans.txt`.
-5. Create the covering indexes, then refresh the visibility map:
+5. Create the covering indexes (the script also runs `VACUUM ANALYZE` to
+   refresh the visibility map needed for index-only scans):
    `psql -U postgres -h localhost -d allocent_mfb -f portfolio-2-query-optimisation/indexes_covering.sql`
-   `psql -U postgres -h localhost -d allocent_mfb -c "VACUUM ANALYZE expense_requests;"`
-   `psql -U postgres -h localhost -d allocent_mfb -c "VACUUM ANALYZE payments;"`
 6. Repeat step 2, saving to `results/after_covering_plans.txt`.
+7. Save the query results:
+   `psql -U postgres -h localhost -d allocent_mfb -f portfolio-2-query-optimisation/queries.sql -o portfolio-2-query-optimisation/results/query_results.txt`
+8. Check row counts, then index usage and sizes:
+   `psql -U postgres -h localhost -d allocent_mfb -f portfolio-2-query-optimisation/row_counts.sql`
+   `psql -U postgres -h localhost -d allocent_mfb -f portfolio-2-query-optimisation/index_stats.sql`
