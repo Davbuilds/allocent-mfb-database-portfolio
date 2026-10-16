@@ -16,7 +16,7 @@ with `setseed(0.42)` so it is reproducible).
 | staff | ~3,100 |
 | vendors | 1,000 |
 | expense_requests | 200,000 |
-| approvals | ~230,000 |
+| approvals | ~309,000 |
 | payments | ~140,000 |
 | wallet_transactions | ~142,000 |
 
@@ -96,6 +96,10 @@ remaining work came from 4,079 individual lookups into `payments` (11,037 of
 14,611 pages), of which only 414 fell within the quarter. The `departments`
 table was still read with a sequential scan despite `idx_departments_company`,
 because with only 300 rows (3 pages), scanning is cheaper than using an index.
+Total pages read actually rose slightly, from 13,576 to 14,611, yet the query
+became 2.5× faster: the parallel scan of all 200,000 requests
+was replaced by direct lookups of about 4,000 rows. Pages read and time
+do not always move together, so both need to be checked.
 
 **Q5 (first round): the planner correctly ignored the index.** Company 7's
 vendors account for about 4,079 requests (about 2% of the table), but those
@@ -129,17 +133,22 @@ Index usage and size (`pg_stat_user_indexes`, from `index_stats.sql`):
 | Index | Times used | Size |
 |---|---|---|
 | idx_departments_company | 0 | 16 kB |
-| idx_payments_request_cover | 4 | 6,752 kB |
-| idx_requests_pending_wallet | 3 | 640 kB |
-| idx_requests_requester_created | 3 | 6,184 kB |
-| idx_requests_vendor | 4 | 1,376 kB |
-| idx_requests_vendor_cover | 22 | 4,416 kB |
-| idx_requests_wallet | 24 | 1,432 kB |
-| idx_wallet_txn_wallet_created | 3 | 4,392 kB |
+| idx_payments_request_cover | 16 | 6,752 kB |
+| idx_requests_pending_wallet | 6 | 640 kB |
+| idx_requests_requester_created | 6 | 6,184 kB |
+| idx_requests_vendor | 5 | 1,376 kB |
+| idx_requests_vendor_cover | 88 | 4,416 kB |
+| idx_requests_wallet | 48 | 1,432 kB |
+| idx_wallet_txn_wallet_created | 6 | 4,392 kB |
 
-`times_used` counts every scan, including warm-up runs and repeated loops
-inside a query, so it shows which indexes are used rather than exact
-frequencies.
+`times_used` (`idx_scan`) counts every index scan since the index was
+created, not only the scans in the five saved plans. It also includes
+warm-up runs, other queries run during testing and lookups PostgreSQL may make
+while planning. This is why `idx_requests_vendor` and
+`idx_payments_request_cover` show uses even though neither appears in
+any of the saved execution plans. The saved plans, not this counter, are the
+evidence of which indexes the five queries actually use. The counts match
+`screenshots/index-usage.png`.
 
 Table size vs index size:
 
@@ -161,9 +170,11 @@ request index, because it stores only pending rows, yet it made Q3 about
 - Keep `idx_requests_requester_created`, `idx_wallet_txn_wallet_created`,
   `idx_requests_pending_wallet`, `idx_requests_wallet` and
   `idx_requests_vendor_cover`.
-- Drop `idx_requests_vendor`: fully superseded by the covering index.
+- Drop `idx_requests_vendor`: not used in any of the five query plans, and
+  fully superseded by the covering index.
 - Drop `idx_departments_company`: never used; the table is too small to benefit.
-- Drop `idx_payments_request_cover`: never chosen by the planner, so it adds
+- Drop `idx_payments_request_cover`: not used in any of the five query plans
+  (the planner kept using `payments_request_id_key`), so it adds
   6.8 MB and slows every payment insert for no benefit.
 
 ## Key lessons
