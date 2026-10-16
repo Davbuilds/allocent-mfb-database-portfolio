@@ -178,6 +178,8 @@ newly created schema. The sample-data inserts succeed, the three invalid
 statements are rejected, and the control insert succeeds.
 - Output: [results/constraint_tests_output.txt](results/constraint_tests_output.txt)
 - Screenshot: ![constraint_tests.sql run on a fresh schema: three statements rejected, control insert accepted](screenshots/constraint-tests-fresh.png)
+  The screenshot shows the three rejections (script lines 20, 23 and 28). The
+  final control insert, just below the visible area, returned `INSERT 0 1`.
 
 ## How to run
 1. Create the database:
