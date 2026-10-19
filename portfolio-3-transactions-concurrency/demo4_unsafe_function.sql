@@ -1,7 +1,7 @@
 -- Allocent MFB: UNSAFE payment function (for Demo 4 only, never for real use)
 -- Same steps as pay_expense_request, but:
 --   * no FOR UPDATE locks, so two sessions can read the same balance
---   * a 10-second pause between reading the balance and writing it, to make
+--   * a 20-second pause between reading the balance and writing it, to make
 --     the race easy to reproduce by hand in two terminals
 -- The new balance is calculated from the value read at the start, so a
 -- second session can overwrite the first session's update (a lost update).
@@ -38,7 +38,7 @@ BEGIN
     p_request_id, w.balance, r.amount;
 
   -- Simulate processing time (e.g. calling the bank's payment API)
-  PERFORM pg_sleep(10);
+  PERFORM pg_sleep(20);
 
   -- Write a balance calculated from the (possibly out-of-date) value read above
   v_new_bal := w.balance - r.amount;
