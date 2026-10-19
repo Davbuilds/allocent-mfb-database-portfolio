@@ -1,0 +1,120 @@
+-- Demo 2: ROLLBACK
+-- Run after setup_demo.sql (wallet 1 starts with NGN 200,000).
+
+\echo '===== Part A: manual ROLLBACK ====='
+===== Part A: manual ROLLBACK =====
+\echo '--- Before ---'
+--- Before ---
+SELECT wallet_id, balance FROM department_wallets;
+ wallet_id |  balance  
+-----------+-----------
+         1 | 200000.00
+(1 row)
+
+
+BEGIN;
+BEGIN
+SELECT pay_expense_request(1, 'PAY-R1') AS payment_id;
+ payment_id 
+------------
+          1
+(1 row)
+
+\echo '--- Inside the transaction: payment made but not committed ---'
+--- Inside the transaction: payment made but not committed ---
+SELECT wallet_id, balance FROM department_wallets;
+ wallet_id | balance  
+-----------+----------
+         1 | 50000.00
+(1 row)
+
+ROLLBACK;
+ROLLBACK
+
+\echo '--- After ROLLBACK: everything undone ---'
+--- After ROLLBACK: everything undone ---
+SELECT wallet_id, balance FROM department_wallets;
+ wallet_id |  balance  
+-----------+-----------
+         1 | 200000.00
+(1 row)
+
+SELECT request_id, status FROM expense_requests WHERE request_id = 1;
+ request_id |  status  
+------------+----------
+          1 | APPROVED
+(1 row)
+
+SELECT count(*) AS payments FROM payments;
+ payments 
+----------
+        0
+(1 row)
+
+
+\echo '===== Part B: automatic rollback on error ====='
+===== Part B: automatic rollback on error =====
+\echo '--- Pay R1 (NGN 150,000) and commit ---'
+--- Pay R1 (NGN 150,000) and commit ---
+BEGIN;
+BEGIN
+SELECT pay_expense_request(1, 'PAY-R1') AS payment_id;
+ payment_id 
+------------
+          2
+(1 row)
+
+COMMIT;
+COMMIT
+SELECT wallet_id, balance FROM department_wallets;
+ wallet_id | balance  
+-----------+----------
+         1 | 50000.00
+(1 row)
+
+
+\echo '--- Try to pay R2 (NGN 150,000) with only NGN 50,000 left ---'
+--- Try to pay R2 (NGN 150,000) with only NGN 50,000 left ---
+BEGIN;
+BEGIN
+SELECT pay_expense_request(2, 'PAY-R2') AS payment_id;
+psql:portfolio-3-transactions-concurrency/demo2_rollback.sql:28: ERROR:  Insufficient funds: wallet 1 has NGN 50000.00, request 2 needs NGN 150000.00
+CONTEXT:  PL/pgSQL function pay_expense_request(integer,text) line 51 at RAISE
+COMMIT;
+ROLLBACK
+
+\echo '--- After the failed payment: R2 unpaid, balance unchanged ---'
+--- After the failed payment: R2 unpaid, balance unchanged ---
+SELECT wallet_id, balance FROM department_wallets;
+ wallet_id | balance  
+-----------+----------
+         1 | 50000.00
+(1 row)
+
+SELECT request_id, status FROM expense_requests WHERE request_id IN (1, 2) ORDER BY request_id;
+ request_id |  status  
+------------+----------
+          1 | PAID
+          2 | APPROVED
+(2 rows)
+
+SELECT payment_id, request_id, amount FROM payments;
+ payment_id | request_id |  amount   
+------------+------------+-----------
+          2 |          1 | 150000.00
+(1 row)
+
+
+\echo '===== Part C: the CHECK constraint as a final safety net ====='
+===== Part C: the CHECK constraint as a final safety net =====
+\echo '--- A direct update that bypasses the function ---'
+--- A direct update that bypasses the function ---
+UPDATE department_wallets SET balance = balance - 150000 WHERE wallet_id = 1;
+psql:portfolio-3-transactions-concurrency/demo2_rollback.sql:38: ERROR:  new row for relation "department_wallets" violates check constraint "chk_wallet_balance"
+DETAIL:  Failing row contains (1, 1, -100000.00, ACTIVE, 2026-10-17 11:35:02.613048+01).
+SELECT wallet_id, balance FROM department_wallets;
+ wallet_id | balance  
+-----------+----------
+         1 | 50000.00
+(1 row)
+
