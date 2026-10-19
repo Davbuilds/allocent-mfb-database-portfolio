@@ -4,7 +4,8 @@
 --   2. a manager (level 1) approval exists
 --   3. requests above NGN 100,000 also have a finance (level 2) approval
 --   4. the requester belongs to the wallet's department
---   5. the wallet has enough funds
+--   5. the wallet is ACTIVE (not FROZEN)
+--   6. the wallet has enough funds
 -- Rows are locked with FOR UPDATE (request first, then wallet) so concurrent
 -- calls cannot overspend or pay the same request twice.
 
@@ -59,6 +60,11 @@ BEGIN
   SELECT * INTO w FROM department_wallets
   WHERE wallet_id = r.wallet_id
   FOR UPDATE;
+
+  -- Rule: a frozen wallet cannot make payments
+  IF w.status <> 'ACTIVE' THEN
+    RAISE EXCEPTION 'Wallet % is % and cannot make payments', w.wallet_id, w.status;
+  END IF;
 
   IF w.balance < r.amount THEN
     RAISE EXCEPTION 'Insufficient funds: wallet % has NGN %, request % needs NGN %',

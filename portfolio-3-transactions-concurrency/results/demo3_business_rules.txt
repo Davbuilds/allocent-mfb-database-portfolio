@@ -1,0 +1,83 @@
+===== Rule 1: above NGN 100,000 needs finance (level 2) approval =====
+--- R3 is NGN 120,000 with manager approval only ---
+SELECT approval_level, decision FROM approvals WHERE request_id = 3;
+ approval_level | decision 
+----------------+----------
+              1 | APPROVED
+(1 row)
+
+BEGIN;
+BEGIN
+SELECT pay_expense_request(3, 'PAY-R3') AS payment_id;
+psql:portfolio-3-transactions-concurrency/demo3_business_rules.sql:8: ERROR:  Request 3 (NGN 120000.00) needs finance approval above NGN 100,000
+CONTEXT:  PL/pgSQL function pay_expense_request(integer,text) line 32 at RAISE
+COMMIT;
+ROLLBACK
+===== Rule 2: only APPROVED requests can be paid =====
+--- R5 is still PENDING ---
+BEGIN;
+BEGIN
+SELECT pay_expense_request(5, 'PAY-R5') AS payment_id;
+psql:portfolio-3-transactions-concurrency/demo3_business_rules.sql:14: ERROR:  Request 5 cannot be paid: status is PENDING
+CONTEXT:  PL/pgSQL function pay_expense_request(integer,text) line 18 at RAISE
+COMMIT;
+ROLLBACK
+===== Rule 3: a request cannot be paid twice =====
+--- Pay R4 once (succeeds) ---
+BEGIN;
+BEGIN
+SELECT pay_expense_request(4, 'PAY-R4') AS payment_id;
+ payment_id 
+------------
+          1
+(1 row)
+
+COMMIT;
+COMMIT
+--- Pay R4 again (refused: already PAID) ---
+BEGIN;
+BEGIN
+SELECT pay_expense_request(4, 'PAY-R4-AGAIN') AS payment_id;
+psql:portfolio-3-transactions-concurrency/demo3_business_rules.sql:24: ERROR:  Request 4 cannot be paid: status is PAID
+CONTEXT:  PL/pgSQL function pay_expense_request(integer,text) line 18 at RAISE
+COMMIT;
+ROLLBACK
+===== Rule 4: finance approval unlocks the large request =====
+--- Finance (Kemi, staff 1) approves R3 at level 2, then R3 is paid ---
+INSERT INTO approvals (request_id, approver_id, approval_level, decision)
+VALUES (3, 1, 2, 'APPROVED');
+INSERT 0 1
+BEGIN;
+BEGIN
+SELECT pay_expense_request(3, 'PAY-R3') AS payment_id;
+ payment_id 
+------------
+          2
+(1 row)
+
+COMMIT;
+COMMIT
+--- Final state ---
+SELECT wallet_id, balance FROM department_wallets;
+ wallet_id | balance  
+-----------+----------
+         1 | 20000.00
+(1 row)
+
+SELECT request_id, amount, status FROM expense_requests ORDER BY request_id;
+ request_id |  amount   |  status  
+------------+-----------+----------
+          1 | 150000.00 | APPROVED
+          2 | 150000.00 | APPROVED
+          3 | 120000.00 | PAID
+          4 |  60000.00 | PAID
+          5 |  50000.00 | PENDING
+(5 rows)
+
+SELECT payment_id, request_id, amount, reference FROM payments ORDER BY payment_id;
+ payment_id | request_id |  amount   | reference 
+------------+------------+-----------+-----------
+          1 |          4 |  60000.00 | PAY-R4
+          2 |          3 | 120000.00 | PAY-R3
+(2 rows)
+
