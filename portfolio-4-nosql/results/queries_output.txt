@@ -1,0 +1,238 @@
+===== Q1: Fuel expenses for one vehicle (category-specific field, partial index) =====
+[
+  {
+    amount: Decimal128('45000.00'),
+    description: 'Diesel for delivery van',
+    status: 'PAID',
+    details: {
+      litres: 45,
+      fuel_type: 'DIESEL',
+      vehicle_plate: 'LND-482-KJ',
+      odometer_km: 85210
+    }
+  }
+]
+
+===== Q2: Trips to Abuja of 2+ nights (fields only travel expenses have) =====
+Count: 114
+[
+  {
+    amount: Decimal128('185000.00'),
+    description: 'Client meeting in Abuja',
+    details: {
+      transport: 'FLIGHT',
+      nights: 2
+    }
+  },
+  {
+    amount: Decimal128('140133.00'),
+    description: 'Travel expense #29',
+    details: {
+      transport: 'FLIGHT',
+      nights: 2
+    }
+  },
+  {
+    amount: Decimal128('450075.00'),
+    description: 'Travel expense #36',
+    details: {
+      transport: 'FLIGHT',
+      nights: 3
+    }
+  }
+]
+
+===== Q3: One complete expense in a single read (no joins) =====
+{
+  company_id: 1,
+  department: {
+    department_id: 4,
+    name: 'Sales'
+  },
+  wallet_id: 4,
+  requester: {
+    staff_id: 7,
+    name: 'Ngozi Eze'
+  },
+  vendor: {
+    vendor_id: 2,
+    name: 'SkyTravels Ltd',
+    bank_name: 'GTBank'
+  },
+  amount: Decimal128('185000.00'),
+  category: 'TRAVEL',
+  description: 'Client meeting in Abuja',
+  status: 'PAID',
+  details: {
+    destination: 'Abuja',
+    purpose: 'Client meeting',
+    transport: 'FLIGHT',
+    departure_date: ISODate('2026-09-10T00:00:00.000Z'),
+    return_date: ISODate('2026-09-12T00:00:00.000Z'),
+    nights: 2
+  },
+  approvals: [
+    {
+      level: 1,
+      approver: {
+        staff_id: 6,
+        name: 'Femi Balogun'
+      },
+      decision: 'APPROVED',
+      decided_at: ISODate('2026-09-05T10:00:00.000Z')
+    },
+    {
+      level: 2,
+      approver: {
+        staff_id: 1,
+        name: 'Kemi Adeyemi'
+      },
+      decision: 'APPROVED',
+      decided_at: ISODate('2026-09-05T15:00:00.000Z')
+    }
+  ],
+  receipts: [
+    {
+      file_path: 'receipts/travel-0001.pdf',
+      uploaded_at: ISODate('2026-09-13T09:00:00.000Z')
+    },
+    {
+      file_path: 'receipts/travel-0002.pdf',
+      uploaded_at: ISODate('2026-09-13T09:05:00.000Z')
+    }
+  ],
+  created_at: ISODate('2026-09-04T09:00:00.000Z')
+}
+
+===== Q4: Paid spend per department for company 1 =====
+[
+  {
+    _id: 'Operations',
+    payments: 271,
+    total_spent: Decimal128('66756241.00')
+  },
+  {
+    _id: 'HR',
+    payments: 255,
+    total_spent: Decimal128('64078353.00')
+  },
+  {
+    _id: 'IT',
+    payments: 230,
+    total_spent: Decimal128('61599489.00')
+  },
+  {
+    _id: 'Sales',
+    payments: 236,
+    total_spent: Decimal128('59121785.00')
+  }
+]
+
+===== Q5: Spend by category for company 1 =====
+[
+  {
+    _id: 'EQUIPMENT',
+    payments: 175,
+    total_spent: Decimal128('43698091.00'),
+    average: Decimal128('249703.3771428571428571428571428571')
+  },
+  {
+    _id: 'SOFTWARE',
+    payments: 173,
+    total_spent: Decimal128('42980183.00'),
+    average: Decimal128('248440.3641618497109826589595375723')
+  },
+  {
+    _id: 'TRAVEL',
+    payments: 160,
+    total_spent: Decimal128('42191072.00'),
+    average: Decimal128('263694.20')
+  },
+  {
+    _id: 'FUEL',
+    payments: 168,
+    total_spent: Decimal128('41835716.00'),
+    average: Decimal128('249022.1190476190476190476190476190')
+  },
+  {
+    _id: 'UTILITIES',
+    payments: 164,
+    total_spent: Decimal128('41389676.00'),
+    average: Decimal128('252376.0731707317073170731707317073')
+  },
+  {
+    _id: 'OTHER',
+    payments: 152,
+    total_spent: Decimal128('39461130.00'),
+    average: Decimal128('259612.6973684210526315789473684211')
+  }
+]
+
+===== Q6: Manager's inbox - 5 newest pending requests for company 1 =====
+[
+  {
+    requester: {
+      name: 'Zainab Usman'
+    },
+    amount: Decimal128('36000.00'),
+    description: 'Team lunch',
+    created_at: ISODate('2026-10-05T09:00:00.000Z')
+  },
+  {
+    requester: {
+      name: 'Musa Sani'
+    },
+    amount: Decimal128('275104.00'),
+    description: 'Travel expense #105',
+    created_at: ISODate('2026-09-27T00:00:00.000Z')
+  },
+  {
+    requester: {
+      name: 'Musa Nwosu'
+    },
+    amount: Decimal128('323435.00'),
+    description: 'Fuel expense #2251',
+    created_at: ISODate('2026-09-26T00:00:00.000Z')
+  },
+  {
+    requester: {
+      name: 'Musa Nwosu'
+    },
+    amount: Decimal128('253957.00'),
+    description: 'Equipment expense #3546',
+    created_at: ISODate('2026-09-25T00:00:00.000Z')
+  },
+  {
+    requester: {
+      name: 'Ada Sani'
+    },
+    amount: Decimal128('216200.00'),
+    description: 'Fuel expense #2264',
+    created_at: ISODate('2026-09-24T00:00:00.000Z')
+  }
+]
+
+===== Q7: Approve a request by adding to its embedded approval history =====
+Before:
+{
+  status: 'PENDING',
+  approvals: []
+}
+After:
+{
+  status: 'APPROVED',
+  approvals: [
+    {
+      level: 1,
+      approver: {
+        staff_id: 8,
+        name: 'Chinedu Okafor'
+      },
+      decision: 'APPROVED',
+      decided_at: ISODate('2026-10-20T12:02:09.899Z')
+    }
+  ]
+}
+
+===== Q8: Rule check - approved/paid requests above NGN 100,000 without finance approval =====
+Violations found: 0

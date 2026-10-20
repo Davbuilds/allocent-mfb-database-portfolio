@@ -1,0 +1,8 @@
+Inserted 6 hand-written examples
+Inserted 5000 generated expenses
+Total documents: 5006
+
+Validation tests:
+  Negative amount: REJECTED - Document failed validation -> properties (amount)
+  Unknown category: REJECTED - Document failed validation -> properties (category)
+  Missing amount: REJECTED - Document failed validation -> required (amount)

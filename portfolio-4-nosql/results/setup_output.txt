@@ -1,0 +1,11 @@
+Collections:
+[
+  'expenses'
+]
+Indexes on expenses:
+[
+  '_id_',
+  'idx_company_status_created',
+  'idx_company_category',
+  'idx_fuel_vehicle'
+]

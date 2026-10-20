@@ -1,0 +1,22 @@
+Documents in collection: 5006
+
+===== Q1: fuel expenses for one vehicle (partial index idx_fuel_vehicle) =====
+Plan:          FETCH <- IXSCAN (idx_fuel_vehicle)
+Returned:      1
+Keys examined: 1
+Docs examined: 1
+Time (ms):     0
+
+===== Q6: manager's inbox, newest pending first (idx_company_status_created) =====
+Plan:          LIMIT <- FETCH <- IXSCAN (idx_company_status_created)
+Returned:      5
+Keys examined: 5
+Docs examined: 5
+Time (ms):     0
+
+===== Q2: trips to Abuja of 2+ nights (no index on details.destination) =====
+Plan:          COLLSCAN
+Returned:      114
+Keys examined: 0
+Docs examined: 5006
+Time (ms):     3
