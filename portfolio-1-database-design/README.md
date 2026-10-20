@@ -149,7 +149,8 @@ the composite FK makes that impossible at database level.
   approver and time, giving a maker-checker audit trail. Requiring level 2
   (finance) approval for requests above ₦100,000 is an application rule: the
   schema allows at most one decision per level (`uq_one_approval_per_level`),
-  but no constraint checks the amount threshold.
+  but no constraint checks the amount threshold. It is enforced by the
+  `pay_expense_request` function in Portfolio 3 (Demo 3).
 - **Ledger (`wallet_transactions`):** every wallet movement is recorded and
   never overwritten, so balances can be audited and reconstructed.
   `chk_txn_source` ties each entry to the allocation or payment that caused it.
