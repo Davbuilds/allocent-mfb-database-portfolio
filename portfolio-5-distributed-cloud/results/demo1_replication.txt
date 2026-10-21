@@ -1,0 +1,26 @@
+--- On the PRIMARY: pay R4 (NGN 60,000) ---
+SELECT pay_expense_request(4, 'PAY-R4') AS payment_id;
+ payment_id 
+------------
+          1
+(1 row)
+
+--- On the REPLICA: the payment has arrived ---
+SELECT pg_is_in_recovery() AS replica_is_standby;
+ replica_is_standby 
+--------------------
+ t
+(1 row)
+
+SELECT wallet_id, balance FROM department_wallets;
+ wallet_id |  balance  
+-----------+-----------
+         1 | 140000.00
+(1 row)
+
+SELECT payment_id, request_id, amount, reference FROM payments;
+ payment_id | request_id |  amount  | reference 
+------------+------------+----------+-----------
+          1 |          4 | 60000.00 | PAY-R4
+(1 row)
+

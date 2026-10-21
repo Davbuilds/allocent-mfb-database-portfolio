@@ -1,0 +1,13 @@
+--- On the REPLICA: try to pay R1 (must be refused) ---
+SELECT pg_is_in_recovery() AS replica_is_standby;
+ replica_is_standby 
+--------------------
+ t
+(1 row)
+
+SELECT pay_expense_request(1, 'PAY-R1');
+psql:/tmp/demo2_replica_write.sql:3: ERROR:  cannot execute SELECT FOR UPDATE in a read-only transaction
+CONTEXT:  SQL statement "SELECT *        FROM expense_requests
+  WHERE request_id = p_request_id
+  FOR UPDATE"
+PL/pgSQL function pay_expense_request(integer,text) line 9 at SQL statement

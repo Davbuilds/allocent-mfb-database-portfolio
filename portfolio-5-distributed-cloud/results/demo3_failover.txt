@@ -1,0 +1,36 @@
+--- Primary is down. The REPLICA still serves reads ---
+SELECT wallet_id, balance FROM department_wallets;
+ wallet_id |  balance  
+-----------+-----------
+         1 | 140000.00
+(1 row)
+
+--- Promote the replica to primary ---
+SELECT pg_promote() AS promoted;
+ promoted 
+----------
+ t
+(1 row)
+
+SELECT pg_is_in_recovery() AS still_standby;
+ still_standby 
+---------------
+ f
+(1 row)
+
+--- The NEW primary accepts writes ---
+INSERT INTO approvals (request_id, approver_id, approval_level, decision)
+VALUES (3, 1, 2, 'APPROVED');
+INSERT 0 1
+SELECT pay_expense_request(3, 'PAY-R3') AS payment_id;
+ payment_id 
+------------
+         34
+(1 row)
+
+SELECT wallet_id, balance FROM department_wallets;
+ wallet_id | balance  
+-----------+----------
+         1 | 20000.00
+(1 row)
+
