@@ -1,8 +1,8 @@
 # Portfolio 4: NoSQL and Advanced Data Models
 
 ## Overview
-For this portfolio I modelled the same Allocent MFB case study in
-**MongoDB 8.0**, a document database. Each expense request becomes one
+This portfolio models the same Allocent MFB case study in **MongoDB 8.0**,
+a document database. Each expense request becomes one
 document that holds the request itself, its category-specific details, its
 approval history and its receipts. The implementation includes schema
 validation, indexes, 5,006 documents, queries, aggregations and `explain()`
@@ -12,8 +12,8 @@ output to show how the indexes are used.
 Expense requests are not all the same shape. A fuel expense records litres,
 fuel type and the vehicle plate. A travel expense records the destination,
 dates and number of nights. A software expense records the product, how many
-licences and how long the subscription runs. In PostgreSQL I would need
-either lots of mostly-empty columns or a separate table for each category.
+licences and how long the subscription runs. In PostgreSQL this
+requires either many mostly-empty columns or a separate table per category.
 In MongoDB, each document just holds the fields it needs, all in one
 collection.
 
@@ -87,8 +87,8 @@ MongoDB is schema-flexible, not schema-less. A `$jsonSchema` validator in
 - `category` and `status` must be one of the allowed values.
 - Each approval must have a level of 1 or 2, a decision and a date.
 
-I tested it with three invalid documents in `02_insert.js`. All three were
-rejected, and the error says which rule they broke:
+Three invalid documents were tested in `02_insert.js`. All three were
+rejected, and each error names the rule that was broken:
 
 | Test | Result |
 |---|---|
@@ -141,7 +141,7 @@ The two indexed queries looked at exactly the documents they returned. The
 unindexed one had to read every document in the collection. For Q6, the
 compound index matches both the filter and the sort order, so MongoDB reads
 the five newest pending requests straight from the index without a sort
-step. It's the same idea as the `(requested_by, created_at DESC)` index in
+step. This is the same principle as the `(requested_by, created_at DESC)` index in
 Portfolio 2. The times are all close to 0 ms because the collection is
 small, so "docs examined" is the more useful number here.
 
@@ -161,7 +161,7 @@ small, so "docs examined" is the more useful number here.
    only grows. An embedded array with `$push` (Q7) models that directly, and
    the update is atomic because it only touches one document.
 4. **Flexible, but with guardrails.** The validator still enforces the money,
-   category and status rules, so the flexibility is only where it's needed.
+   category and status rules, so the flexibility applies only where it is needed.
 5. **Splits easily by tenant.** Every document has a `company_id`, which
    makes it a natural shard key for spreading data across servers
    (Portfolio 5).
@@ -180,7 +180,7 @@ small, so "docs examined" is the more useful number here.
 - **No foreign keys.** MongoDB does not check that a `vendor_id` or
   `wallet_id` actually exists. The application has to take care of that.
 - **Rules across documents.** Anything that spans documents, such as a wallet
-  balance limit, can't be enforced by the validator.
+  balance limit, cannot be enforced by the validator.
 
 **Using both (polyglot persistence).** A realistic Allocent system would use
 both databases: PostgreSQL as the system of record for balances, payments and

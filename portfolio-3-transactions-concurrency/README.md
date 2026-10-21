@@ -160,9 +160,9 @@ and pauses before `COMMIT`, holding the lock.
 | Payments made | 2 (NGN 300,000) | 1 (NGN 150,000) |
 | Wallet correct afterwards? | No | Yes, 50,000 |
 
-So the lock makes payments from the same wallet take turns. Only wallet 1
-was locked, so payments from other wallets would not have been held up.
-The downside is that the second person has to wait, which is why the
+**Locking makes payments from the same wallet take turns.** Only wallet 1
+was locked, so payments from other wallets would not have been held up. The
+cost is waiting: session 2 spent 23.4 seconds blocked, which is why the
 payment transaction should do its work quickly and commit.
 
 Evidence: [results/demo5_locking.txt](results/demo5_locking.txt)
@@ -188,31 +188,28 @@ and commits ([demo6_session2.sql](demo6_session2.sql)).
   so both reads returned 200,000, even though the payment had already
   committed. Once the transaction ended, a new read saw 140,000.
 
-Neither level is "better" in general. For payments I kept the default
-`READ COMMITTED` and added row locks (Demo 5), because a payment has to use
-the latest balance. For a report that runs several queries and needs them
-to agree with each other, `REPEATABLE READ` is the safer choice.
+**Neither level is better in general; the right one depends on the task.**
+Payments keep the default `READ COMMITTED` with explicit row locks (Demo 5),
+because a payment must act on the latest balance. A report that runs several
+queries and needs them to agree is safer under `REPEATABLE READ`.
 
 ![Demo 6A: READ COMMITTED](screenshots/demo6a-read-committed.png)
 
 ![Demo 6B: REPEATABLE READ](screenshots/demo6b-repeatable-read.png)
 
 ## Key lessons
-- Wrapping the payment steps in one transaction means it either fully
-  happens or not at all. Even `COMMIT` comes back as `ROLLBACK` after an
-  error, because PostgreSQL will not save a transaction that has already
-  failed.
-- The CHECK constraint from Portfolio 1 was not enough on its own. In Demo 4
-  every row looked valid, yet the wallet had paid out more than it held.
-  Constraints check rows, not what two sessions do at the same time.
-- The real danger is "read the balance, then write a new balance based on
-  it". If someone else changes the row in between, their change is lost.
-  `FOR UPDATE` fixes this by making the second session wait.
-- Always locking the request first and then the wallet means two payments
-  can never grab the same rows in the opposite order, which is what causes
-  deadlocks.
-- The isolation level should match the job: the latest data for payments,
-  a stable snapshot for reports.
+- A transaction makes the four payment steps all-or-nothing; after an
+  error, even `COMMIT` returns `ROLLBACK`, because a failed transaction
+  cannot be saved.
+- CHECK constraints protect individual rows, not concurrent transactions; in
+  Demo 4 every row was valid, yet NGN 300,000 left a NGN 200,000 wallet.
+- Reading a balance and later writing a value calculated from it is unsafe
+  under concurrency; `FOR UPDATE` makes the second session wait for the
+  current value.
+- Locking rows in a fixed order (request, then wallet) prevents two payments
+  from deadlocking each other.
+- Isolation level is a trade-off between the latest data and a stable
+  snapshot; payments need the first, reports the second.
 
 ## Files
 | File | Purpose |
