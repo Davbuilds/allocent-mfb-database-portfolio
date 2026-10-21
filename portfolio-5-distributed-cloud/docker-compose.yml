@@ -1,0 +1,32 @@
+# Allocent MFB - Portfolio 5: PostgreSQL primary + streaming replica
+# Demo credentials only (local containers), never real passwords.
+
+services:
+  pg-primary:
+    image: postgres:18
+    container_name: pg-primary
+    environment:
+      POSTGRES_PASSWORD: demo_primary_pw
+      POSTGRES_DB: allocent
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c hot_standby=on
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./primary-init:/docker-entrypoint-initdb.d
+
+  pg-replica:
+    image: postgres:18
+    container_name: pg-replica
+    environment:
+      POSTGRES_PASSWORD: demo_primary_pw
+    depends_on:
+      - pg-primary
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./replica-entrypoint.sh:/replica-entrypoint.sh
+    entrypoint: ["bash", "/replica-entrypoint.sh"]

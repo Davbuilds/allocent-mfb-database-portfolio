@@ -1,0 +1,10 @@
+ client_addr |   state   | sync_state 
+-------------+-----------+------------
+ 172.19.0.3  | streaming | async
+(1 row)
+
+  status   | sender_host 
+-----------+-------------
+ streaming | pg-primary
+(1 row)
+
