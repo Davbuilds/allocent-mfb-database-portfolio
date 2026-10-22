@@ -1,13 +1,15 @@
-# Portfolio 2: Query Processing and Optimisation 
+# Portfolio 2: Query Processing and Optimisation
+
 ## Overview
-This portfolio measures how PostgreSQL 18 executes five realistic Allocent MFB
-queries on a large dataset, designs indexes from the execution plans, and
-compares performance before and after optimisation.
+In this portfolio I measured how PostgreSQL 18 runs five realistic Allocent
+MFB queries on a large dataset, designed indexes based on what the execution
+plans showed, and compared performance before and after.
 
 ## Test data
-Indexes make no measurable difference on small tables, so a realistic dataset
-was generated with `seed_data.sql` (pure SQL using `generate_series`, seeded
-with `setseed(0.42)` so it is reproducible).
+Indexes make no measurable difference on small tables, so I generated a
+realistic dataset with `seed_data.sql`. It is pure SQL using
+`generate_series`, and it is seeded with `setseed(0.42)` so the same data is
+produced every time.
 
 | Table | Rows |
 |---|---|
@@ -37,11 +39,12 @@ Defined in `queries.sql`; results in `results/query_results.txt`.
 | Q5 | Top 5 vendors by total paid for one company | Vendor analysis |
 
 ## Method
-1. Plans were captured with `EXPLAIN (ANALYZE, BUFFERS)` (`explain_queries.sql`),
-   which runs each query and reports the real plan, timings and pages read.
-2. Each set of plans was run once to warm the cache, then run again and saved,
-   so all timings compare in-memory execution.
-3. Three stages were measured:
+1. I captured the plans with `EXPLAIN (ANALYZE, BUFFERS)` (`explain_queries.sql`),
+   which actually runs each query and reports the real plan, timings and
+   pages read.
+2. I ran each set of plans once to warm the cache, then ran it again and
+   saved that run, so all the timings compare in-memory execution.
+3. I measured three stages:
    - **Before:** only primary-key and unique indexes (`results/before_plans.txt`)
    - **After indexes:** targeted indexes from `indexes.sql` (`results/after_plans.txt`)
    - **After covering:** covering indexes from `indexes_covering.sql`
@@ -141,14 +144,13 @@ Index usage and size (`pg_stat_user_indexes`, from `index_stats.sql`):
 | idx_requests_wallet | 48 | 1,432 kB |
 | idx_wallet_txn_wallet_created | 6 | 4,392 kB |
 
-`times_used` (`idx_scan`) counts every index scan since the index was
-created, not only the scans in the five saved plans. It also includes
-warm-up runs, other queries run during testing and lookups PostgreSQL may make
-while planning. This is why `idx_requests_vendor` and
-`idx_payments_request_cover` show uses even though neither appears in
-any of the saved execution plans. The saved plans, not this counter, are the
-evidence of which indexes the five queries actually use. The counts match
-`screenshots/index-usage.png`.
+A note on `times_used` (`idx_scan`): it counts every scan since the index
+was created, not just the scans in my five saved plans. Warm-up runs, other
+queries I ran while testing, and lookups PostgreSQL may make while planning
+all add to it. That is why `idx_requests_vendor` and
+`idx_payments_request_cover` show some uses even though neither appears in
+any saved plan. The saved plans are the real evidence of which indexes the
+five queries use. The counts above match `screenshots/index-usage.png`.
 
 Table size vs index size:
 

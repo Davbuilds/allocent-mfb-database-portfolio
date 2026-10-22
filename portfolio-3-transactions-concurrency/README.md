@@ -3,8 +3,8 @@
 ## Overview
 Paying an expense request is the most important operation in Allocent MFB:
 money leaves a department wallet and goes to a vendor. If it goes wrong, the
-bank either loses money or records a payment that never happened. This
-portfolio shows how PostgreSQL transactions keep that operation correct,
+bank either loses money or records a payment that never happened. In this
+portfolio I show how PostgreSQL transactions keep that operation correct,
 both on its own and when several people use the system at the same time.
 
 | Requirement (brief) | Demo |
@@ -16,10 +16,11 @@ both on its own and when several people use the system at the same time.
 | Control mechanism | Demo 5: row locking with `SELECT ... FOR UPDATE` |
 | Isolation | Demo 6: `READ COMMITTED` vs `REPEATABLE READ` |
 
-All demos use a small, predictable dataset ([setup_demo.sql](setup_demo.sql))
-in a separate database, `allocent_p3`, built from the Portfolio 1 schema:
-one company, one HR wallet (wallet 1) holding **NGN 200,000**, and five
-expense requests.
+For the demos I used a small, predictable dataset
+([setup_demo.sql](setup_demo.sql)) in a separate database, `allocent_p3`,
+built from the Portfolio 1 schema: one company, one HR wallet (wallet 1)
+holding **NGN 200,000**, and five expense requests. Keeping it small meant I
+always knew exactly what each balance should be.
 
 | Request | Amount (NGN) | Approvals | Used to show |
 |---|---|---|---|
@@ -105,14 +106,15 @@ Evidence: [results/demo3_business_rules.txt](results/demo3_business_rules.txt)
 ![Demo 3: business rules](screenshots/demo3-business-rules.png)
 
 ## Demo 4: Concurrency issue (lost update)
-To show what goes wrong without locking,
-[demo4_unsafe_function.sql](demo4_unsafe_function.sql) defines
-`pay_expense_request_unsafe`: the same steps, but with **no `FOR UPDATE`**
+To show what goes wrong without locking, I made an unsafe copy of the
+function, `pay_expense_request_unsafe`
+([demo4_unsafe_function.sql](demo4_unsafe_function.sql)): the same steps, but
+with **no `FOR UPDATE`**
 and a 20-second pause between reading the balance and writing it (to
 represent processing time, such as calling a payment provider). It exists
 only for this demo.
 
-Two sessions were started at almost the same time in two terminals:
+I started two sessions at almost the same time in two terminals:
 session 1 paid R1 ([demo4_session1.sql](demo4_session1.sql)) and session 2
 paid R2 ([demo4_session2.sql](demo4_session2.sql)), NGN 150,000 each.
 
@@ -140,8 +142,8 @@ Evidence: [results/demo4_check.txt](results/demo4_check.txt)
 ![Demo 4: lost update](screenshots/demo4-lost-update.png)
 
 ## Demo 5: Control mechanism (row locking)
-The same race was repeated with the real function, which locks the wallet
-with `SELECT ... FOR UPDATE`.
+I then repeated the same race with the real function, which locks the
+wallet with `SELECT ... FOR UPDATE`.
 [demo5_session1.sql](demo5_session1.sql) pays R1 inside an open transaction
 and pauses before `COMMIT`, holding the lock.
 [demo5_session2.sql](demo5_session2.sql) then tries to pay R2.
@@ -189,8 +191,8 @@ and commits ([demo6_session2.sql](demo6_session2.sql)).
   committed. Once the transaction ended, a new read saw 140,000.
 
 **Neither level is better in general; the right one depends on the task.**
-Payments keep the default `READ COMMITTED` with explicit row locks (Demo 5),
-because a payment must act on the latest balance. A report that runs several
+For payments I kept the default `READ COMMITTED` with explicit row locks
+(Demo 5), because a payment must act on the latest balance. A report that runs several
 queries and needs them to agree is safer under `REPEATABLE READ`.
 
 ![Demo 6A: READ COMMITTED](screenshots/demo6a-read-committed.png)

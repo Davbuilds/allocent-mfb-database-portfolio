@@ -1,8 +1,8 @@
 # Portfolio 4: NoSQL and Advanced Data Models
 
 ## Overview
-This portfolio models the same Allocent MFB case study in **MongoDB 8.0**,
-a document database. Each expense request becomes one
+For this portfolio I modelled the same Allocent MFB case study in
+**MongoDB 8.0**, a document database. Each expense request becomes one
 document that holds the request itself, its category-specific details, its
 approval history and its receipts. The implementation includes schema
 validation, indexes, 5,006 documents, queries, aggregations and `explain()`
@@ -12,8 +12,8 @@ output to show how the indexes are used.
 Expense requests are not all the same shape. A fuel expense records litres,
 fuel type and the vehicle plate. A travel expense records the destination,
 dates and number of nights. A software expense records the product, how many
-licences and how long the subscription runs. In PostgreSQL this
-requires either many mostly-empty columns or a separate table per category.
+licences and how long the subscription runs. In PostgreSQL I would
+need either lots of mostly-empty columns or a separate table per category.
 In MongoDB, each document just holds the fields it needs, all in one
 collection.
 
@@ -87,8 +87,8 @@ MongoDB is schema-flexible, not schema-less. A `$jsonSchema` validator in
 - `category` and `status` must be one of the allowed values.
 - Each approval must have a level of 1 or 2, a decision and a date.
 
-Three invalid documents were tested in `02_insert.js`. All three were
-rejected, and each error names the rule that was broken:
+I tested the validator with three invalid documents in `02_insert.js`. All
+three were rejected, and each error names the rule that was broken:
 
 | Test | Result |
 |---|---|

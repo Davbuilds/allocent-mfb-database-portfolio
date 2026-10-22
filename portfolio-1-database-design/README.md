@@ -1,20 +1,22 @@
 # Portfolio 1: Database Design and Modelling
 
 ## Case study
-Allocent MFB is a fictional Nigerian digital microfinance bank offering a
-multi-tenant spend management platform: companies allocate budgets from a
-main business account to department wallets, staff raise expense requests,
-managers (and finance, for large amounts) approve them, and approved requests
-are paid to vendors from the wallet. The full case study, including users and
-key operations, is in the [main README](../README.md#case-study).
+Allocent MFB is a fictional Nigerian digital microfinance bank. Its platform
+lets companies manage spending: the finance team moves money from the main
+business account into department wallets, staff raise expense requests,
+managers approve them (with finance also approving large amounts), and
+approved requests are paid to vendors straight from the wallet. Many
+companies share the same database. The full case study, including the users
+and key operations, is in the [main README](../README.md#case-study).
 
 ## ER diagram
 ![Allocent MFB ER diagram](er-diagram.png)
 
 Source: [allocent_er.dbml](allocent_er.dbml), rendered with dbdiagram.io.
 
-The model has 13 entities. Companies are the tenants; every other entity
-belongs to a company directly or through a department, wallet or request.
+The model has 13 entities. Companies are the tenants, and everything else
+belongs to a company, either directly or through a department, wallet or
+request.
 
 | Entity | Purpose | Key relationships |
 |---|---|---|
@@ -96,27 +98,31 @@ Three design choices intentionally store derivable data, for practical reasons:
   department's company.
 
 ## Relational schema
-The schema is implemented in [schema.sql](schema.sql): 13 tables with primary
-keys, foreign keys and named constraints, created inside a single transaction.
-The script is re-runnable because it drops existing tables first.
+I implemented the schema in [schema.sql](schema.sql): 13 tables with primary
+keys, foreign keys and named constraints, all created inside one transaction.
+The script drops the existing tables first, so it can be re-run whenever a
+clean database is needed.
 
 ## Keys and Constraints
 
 **Primary keys:** every table uses a single-column surrogate key
-(`INT GENERATED ALWAYS AS IDENTITY`, `BIGINT` for the high-volume ledger).
-Surrogate keys never change, keep foreign keys small, and avoid using
-business values such as emails or account numbers, which can change, as keys.
-Natural identifiers are still protected with `UNIQUE` constraints.
+(`INT GENERATED ALWAYS AS IDENTITY`, and `BIGINT` for the ledger, which grows
+fastest). I chose surrogate keys because they never change and keep foreign
+keys small. Business values such as emails or account numbers can change, so
+I did not use them as keys, but they are still protected with `UNIQUE`
+constraints.
 
-**Foreign keys:** every relationship is enforced with `REFERENCES`, so a
-request cannot point to a missing wallet, staff member or vendor, and a
-ledger entry cannot point to a missing allocation or payment.
+**Foreign keys:** every relationship is enforced with `REFERENCES`. A
+request cannot point to a wallet, staff member or vendor that does not exist,
+and a ledger entry cannot point to a missing allocation or payment.
 
-**Composite foreign key for tenant isolation:** `departments` has
-`UNIQUE (department_id, company_id)`, and `staff` references that pair
-through `fk_staff_dept_same_company`. A plain FK on `department_id` would
-allow a staff member of company 2 to be placed in company 1's department;
-the composite FK makes that impossible at database level.
+**Composite foreign key for tenant isolation:** this is the most important
+constraint for a shared database. With a plain foreign key on
+`department_id`, nothing would stop a staff member of company 2 being placed
+in company 1's department. So `departments` has
+`UNIQUE (department_id, company_id)`, and `staff` references that pair through
+`fk_staff_dept_same_company`. The database itself now refuses any staff
+member whose department belongs to a different company.
 
 | Constraint | Table | Type | Business rule enforced |
 |---|---|---|---|
@@ -141,27 +147,29 @@ the composite FK makes that impossible at database level.
 | `chk_card_masked` | cards | CHECK | Only masked card numbers are stored, never full PANs |
 
 ## Design decisions
-- **Roles in one `staff` table:** all users share the same attributes, so
-  role is a checked column rather than four tables. `department_id` is
-  nullable only for company-wide roles (ADMIN, FINANCE), enforced by
-  `chk_staff_dept_required`.
-- **Approvals as separate rows:** each decision is its own row with level,
-  approver and time, giving a maker-checker audit trail. Requiring level 2
-  (finance) approval for requests above ₦100,000 is an application rule: the
-  schema allows at most one decision per level (`uq_one_approval_per_level`),
-  but no constraint checks the amount threshold. It is enforced by the
+- **One `staff` table for all roles.** Admins, finance officers, managers
+  and staff all have the same attributes, so I made the role a checked column
+  instead of creating four tables. Only the company-wide roles (ADMIN,
+  FINANCE) can have no department, and `chk_staff_dept_required` enforces that.
+- **Each approval is its own row.** Every decision records the level, the
+  approver and the time, which gives a maker-checker audit trail. The rule
+  that requests above ₦100,000 also need finance (level 2) approval is not a
+  database constraint: the schema only allows one decision per level
+  (`uq_one_approval_per_level`). The threshold itself is enforced by the
   `pay_expense_request` function in Portfolio 3 (Demo 3).
-- **Ledger (`wallet_transactions`):** every wallet movement is recorded and
-  never overwritten, so balances can be audited and reconstructed.
-  `chk_txn_source` ties each entry to the allocation or payment that caused it.
-- **Vendors owned by companies:** each tenant manages its own payees, so
-  `vendors.company_id` keeps one company's vendors invisible to another.
-- **Stored balances:** see Deliberate denormalisation above.
-- **Money as `NUMERIC(15,2)`:** exact decimal arithmetic, never floating point.
-- **Shared-schema multi-tenancy:** all companies share the same tables, with
-  `company_id` identifying each tenant's data. This is simpler to build and
-  operate than a separate schema or database per company, and tenant
-  isolation is enforced in the database by `fk_staff_dept_same_company`.
+- **A ledger that is never overwritten.** `wallet_transactions` records every
+  movement of money, so any balance can be audited and rebuilt.
+  `chk_txn_source` makes sure each entry points to the allocation or payment
+  that caused it.
+- **Vendors belong to a company.** Each company manages its own payees, and
+  `vendors.company_id` keeps one company's vendors hidden from another.
+- **Stored balances.** Explained under Deliberate denormalisation above.
+- **Money as `NUMERIC(15,2)`.** Exact decimal arithmetic. Floating point can
+  introduce rounding errors, which is not acceptable for a bank.
+- **One shared schema for all companies.** Every company uses the same
+  tables, with `company_id` marking whose data is whose. This is simpler to
+  build and run than a separate schema or database per company, and the
+  composite foreign key keeps the companies apart.
 
 ## Evidence
 Constraint tests are in [constraint_tests.sql](constraint_tests.sql).
@@ -174,9 +182,10 @@ Constraint tests are in [constraint_tests.sql](constraint_tests.sql).
 | Negative wallet balance | Rejected by `chk_wallet_balance` | ![UPDATE setting a wallet balance to -5000 rejected by chk_wallet_balance](screenshots/constraint-wallet-balance.png) |
 | Staff in another company's department | Rejected by `fk_staff_dept_same_company` | ![INSERT of company 3 staff into company 1's department rejected by fk_staff_dept_same_company](screenshots/constraint-cross-company.png) |
 
-**Full test run on a fresh schema:** `constraint_tests.sql` was run against a
-newly created schema. The sample-data inserts succeed, the three invalid
-statements are rejected, and the control insert succeeds.
+**Full test run on a fresh schema:** I also ran the whole of
+`constraint_tests.sql` against a newly created schema. The sample data went
+in, the three invalid statements were rejected, and the final control insert
+(a valid version of the rejected staff member) succeeded.
 - Output: [results/constraint_tests_output.txt](results/constraint_tests_output.txt)
 - Screenshot: ![constraint_tests.sql run on a fresh schema: three statements rejected, control insert accepted](screenshots/constraint-tests-fresh.png)
   The screenshot shows the three rejections (script lines 20, 23 and 28). The
