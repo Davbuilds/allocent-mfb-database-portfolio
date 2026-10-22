@@ -2,7 +2,7 @@
 
 ## My decisions and my own work
 I made the design decisions for every portfolio. I wrote parts of the
-implementation myself and developed other parts with Claude (claude.ai), then
+implementation myself and developed other parts with Claude (Anthropic), then
 adapted, ran and tested all of it. The main pieces of each portfolio are:
 
 - **Portfolio 1:** the case study, the schema design (`schema.sql`), the ER
@@ -20,17 +20,16 @@ adapted, ran and tested all of it. The main pieces of each portfolio are:
 
 I ran every script and demo myself and took all of the screenshots.
 
-## AI tools used
-- **Claude (claude.ai)**, used in chat: helped me explore the case study and
-  draft parts of the schema, test data generator, queries, payment function,
-  MongoDB scripts and Docker setup, alongside parts I wrote myself. I then
-  adapted, ran, tested and corrected all of it. Also used to explain execution
-  plans, isolation levels, locking and replication, and to troubleshoot setup
-  problems (PATH, password reset, Docker, PowerShell quoting).
-- **Claude Code (Claude Opus 5.5)**, used in VS Code between 15 and 21 October
-  2026, for the work in the table below.
+## AI tool used
+**Claude (Anthropic).** It helped me explore the case study and draft parts of
+the schema, test data generator, queries, payment function, MongoDB scripts
+and Docker setup, alongside parts I wrote myself. I then adapted, ran, tested
+and corrected all of it. It was also used to explain execution plans,
+isolation levels, locking and replication, to troubleshoot setup problems
+(PATH, password reset, Docker, PowerShell quoting), and for the work in the
+table below.
 
-| Portfolio | What Claude Code was used for | How I reviewed and verified it |
+| Portfolio | What Claude was used for | How I reviewed and verified it |
 |---|---|---|
 | All | Checking the repository against the assessment brief; finding missing or broken files; rewording README text into a consistent voice (wording only) | Checked each finding by opening the files; compared reworded text with the previous versions using `git diff` |
 | 1 | Drafting parts of the README (case study summary, entity table, keys and constraints table, design decisions, evidence, How to Run); writing `constraint_tests.sql`; correcting the DBML to show the composite foreign key | Ran the schema and constraint tests on a fresh database and confirmed the expected errors; re-exported the ER diagram and checked it against `schema.sql` |
