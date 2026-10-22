@@ -2,7 +2,7 @@
 
 ## My decisions and my own work
 I made the design decisions for every portfolio. I wrote parts of the
-implementation myself and developed other parts with Claude (Anthropic), then
+implementation myself and developed other parts with Claude, then
 adapted, ran and tested all of it. The main pieces of each portfolio are:
 
 - **Portfolio 1:** the case study, the schema design (`schema.sql`), the ER
@@ -21,7 +21,7 @@ adapted, ran and tested all of it. The main pieces of each portfolio are:
 I ran every script and demo myself and took all of the screenshots.
 
 ## AI tool used
-**Claude (Anthropic).** It helped me explore the case study and draft parts of
+**Claude.** It helped me explore the case study and draft parts of
 the schema, test data generator, queries, payment function, MongoDB scripts
 and Docker setup, alongside parts I wrote myself. I then adapted, ran, tested
 and corrected all of it. It was also used to explain execution plans,
